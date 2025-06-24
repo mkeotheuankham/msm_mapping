@@ -97,20 +97,22 @@ const MapComponent = () => {
     });
 
     let segmentOverlays = [];
-    let segmentInputs = [];
 
     draw.on("drawstart", (evt) => {
       const geom = evt.feature.getGeometry();
 
       evt.feature.on("change", () => {
-        if (geom.getType() !== "LineString") return;
-
         segmentOverlays.forEach((o) => map.removeOverlay(o));
-        segmentInputs.forEach((el) => el.remove());
         segmentOverlays = [];
-        segmentInputs = [];
 
-        const coords = geom.getCoordinates();
+        let coords = [];
+        if (geom.getType() === "LineString") {
+          coords = geom.getCoordinates();
+        } else if (geom.getType() === "Polygon") {
+          coords = geom.getCoordinates()[0];
+        } else {
+          return;
+        }
 
         for (let i = 1; i < coords.length; i++) {
           const c1 = coords[i - 1];
@@ -118,18 +120,49 @@ const MapComponent = () => {
           const mid = [(c1[0] + c2[0]) / 2, (c1[1] + c2[1]) / 2];
           const len = getLength(new LineString([c1, c2]));
 
-          const input = document.createElement("input");
-          input.className = "segment-input";
-          input.type = "number";
-          input.value = len.toFixed(1);
-          input.style.width = "60px";
+          const container = document.createElement("div");
+          container.className = "segment-label";
+          const display = len >= 1000 ? `${(len / 1000).toFixed(2)} km` : `${len.toFixed(1)} m`;
+          container.textContent = display;
 
-          input.addEventListener("change", () => {
-            // Optional: logic to handle length constraint
+          const dx = c2[0] - c1[0];
+          const dy = c2[1] - c1[1];
+          const angle = (Math.atan2(dy, dx) * 180) / Math.PI;
+          container.style.transform = `rotate(${angle}deg)`;
+
+          container.addEventListener("click", () => {
+            const input = document.createElement("input");
+            input.type = "text";
+            input.value = display;
+            input.className = "segment-label-input";
+
+            input.addEventListener("keydown", (e) => {
+              if (e.key === "Enter") {
+                input.blur();
+              }
+            });
+
+            input.addEventListener("blur", () => {
+              let val = parseFloat(input.value);
+              if (isNaN(val)) return;
+              if (display.includes("km")) val *= 1000;
+
+              const currentLen = getLength(new LineString([c1, c2]));
+              const scale = val / currentLen;
+              const dx = c2[0] - c1[0];
+              const dy = c2[1] - c1[1];
+              const newC2 = [c1[0] + dx * scale, c1[1] + dy * scale];
+              coords[i] = newC2;
+              geom.setCoordinates(geom.getType() === "Polygon" ? [coords] : coords);
+            });
+
+            container.textContent = "";
+            container.appendChild(input);
+            input.focus();
           });
 
           const overlay = new Overlay({
-            element: input,
+            element: container,
             position: mid,
             positioning: "bottom-center",
             offset: [0, -10],
@@ -137,7 +170,6 @@ const MapComponent = () => {
 
           map.addOverlay(overlay);
           segmentOverlays.push(overlay);
-          segmentInputs.push(input);
         }
       });
     });
@@ -195,20 +227,26 @@ const MapComponent = () => {
       <CoordinateBar map={map} />
       <div ref={mapRef} style={{ width: "100%", height: "100%" }} />
       <style>{`
-        .measure-label {
-          background: rgba(0,0,0,0.7);
-          color: #fff;
+        .segment-label {
           padding: 2px 6px;
-          border-radius: 4px;
-          font-size: 12px;
-          white-space: nowrap;
-        }
-        .segment-input {
-          padding: 2px;
           font-size: 11px;
-          text-align: center;
-          border: 1px solid #888;
+          font-family: monospace;
+          color: white;
+          background: rgba(0, 0, 0, 0.6);
           border-radius: 4px;
+          white-space: nowrap;
+          pointer-events: auto;
+          transform-origin: center;
+          cursor: pointer;
+        }
+        .segment-label-input {
+          width: 70px;
+          font-size: 11px;
+          font-family: monospace;
+          text-align: center;
+          padding: 1px;
+          border: 1px solid #999;
+          border-radius: 3px;
         }
       `}</style>
     </div>
