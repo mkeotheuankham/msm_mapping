@@ -1,0 +1,60 @@
+// ສີຕົ້ນຕໍ
+$primary-color: #3388ff;
+$secondary-color: #ff5733;
+$success-color: #33ff57;
+$warning-color: #f5ff33;
+$danger-color: #ff3333;
+$info-color: #33fff5;
+
+// ສີແຜນທີ່
+$map-colors: (
+  "chanthabury": #3388ff,
+  "sikodtabong": #ff5733,
+  "xaisettha": #33ff57,
+  "sisattanak": #5733ff,
+  "naxaithong": #ff33f5,
+  "xaithany": #33fff5,
+  "hadxaifong": #f5ff33,
+  "xangthong": #ff8c33,
+  "pakngum": #8c33ff
+);
+
+// ຂະໜາດຕົວອັກສອນ
+$font-size-base: 14px;
+$font-size-lg: 16px;
+$font-size-sm: 12px;
+
+// ຊ່ອງຫວ່າງ
+$spacer: 1rem;
+$spacers: (
+  0: 0,
+  1: $spacer * 0.25,
+  2: $spacer * 0.5,
+  3: $spacer,
+  4: $spacer * 1.5,
+  5: $spacer * 3
+);
+
+// ຂະໜາດກະດານ
+$border-radius: 4px;
+$border-radius-lg: 6px;
+$border-radius-sm: 2px;
+
+// ຊ່ອງຫວ່າງຂອງແຜນທີ່
+$map-padding: 50px;
+
+// ຂະໜາດສູງສຸດ
+$max-width: 1200px;
+
+// ການໂຫຼດ
+$loading-bar-height: 4px;
+$loading-bar-color: $primary-color;
+
+// ຊັ້ນ overlay
+$z-indexes: (
+  "map": 0,
+  "controls": 100,
+  "feature-panel": 200,
+  "loading-bar": 300,
+  "modal": 400
+);
