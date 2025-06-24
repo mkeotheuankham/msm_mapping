@@ -1,61 +1,41 @@
-/* src/index.css */
-body {
+/* ทำให้ body, html, root มีความสูง 100% */
+html,
+body,
+#root {
+  height: 100%;
   margin: 0;
-  font-family: "Noto Sans Lao", sans-serif;
+  padding: 0;
+  font-family: sans-serif;
+  background-color: #f0f0f0; /* สีพื้นหลังจางๆ */
 }
 
-.floating-buttons {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  z-index: 1000;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  background: rgba(0, 0, 0, 0.7);
-  padding: 10px;
-  border-radius: 8px;
+/* ลบ scroll และจัดระเบียบ layout */
+body {
+  overflow: hidden;
 }
 
-.floating-buttons button {
-  background: rgba(255, 255, 255, 0.1);
-  border: none;
-  color: white;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s;
+/* ปรับ style สำหรับ map container */
+.ol-map {
+  width: 100%;
+  height: 100%;
 }
 
-.floating-buttons button:hover {
-  background: rgba(255, 255, 255, 0.2);
+/* ปรับ UI ของ OpenLayers (เช่นปุ่มซูม) ให้ดูดีขึ้นเล็กน้อย */
+.ol-control {
+  font-size: 14px;
 }
 
-.district-selector {
-  position: absolute;
-  top: 20px;
-  left: 20px;
-  z-index: 1000;
-  background: rgba(0, 0, 0, 0.7);
-  padding: 15px;
-  border-radius: 8px;
-  color: white;
-  max-height: 80vh;
-  overflow-y: auto;
+/* ป้องกัน map container จากปัญหา layout */
+.map-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
 }
 
-.district-item {
-  margin: 8px 0;
-}
-
-.color-indicator {
-  display: inline-block;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  margin-right: 8px;
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
 }
