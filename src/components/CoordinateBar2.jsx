@@ -3,6 +3,7 @@ import { toLonLat } from "ol/proj";
 import proj4 from "proj4";
 import HistoryToggleButton from "./HistoryToggleButton";
 
+// Define UTM Zone 48N for Lao/Thailand area
 proj4.defs("EPSG:32648", "+proj=utm +zone=48 +datum=WGS84 +units=m +no_defs");
 
 const CoordinateBar = ({ map }) => {
@@ -77,127 +78,108 @@ const CoordinateBar = ({ map }) => {
 
   return (
     <>
-      <div className="coordinate-button-container">
-        <button
-          className="coordinate-toggle-btn"
-          onClick={() => setShowHistory((v) => !v)}
-          title="Toggle coordinate info"
-        >
-          📍
-        </button>
-
-        {showHistory && (
-          <div
-            className="history-panel"
-            onClick={handleCopy}
-            title="Click current coords to copy"
-          >
-            <div className="current-coords">
-              <strong>Current Coordinates:</strong>
-              <div>
-                UTM Zone {coords.zone} E: {coords.easting} N: {coords.northing}
-              </div>
-              <div>
-                Lat: {coords.lat} Lon: {coords.lon}
-              </div>
-              <div className="copy-status">{copySuccess}</div>
-            </div>
-
-            <hr />
-
-            <div
-              className="history-list"
-              title="Click coord to copy, × to remove"
-            >
-              {history.length === 0 && (
-                <div className="empty">No history yet.</div>
-              )}
-              {history.map((entry) => (
-                <div key={entry.id} className="history-entry">
-                  <div
-                    className="coord-text"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      copyHistoryEntry(entry);
-                    }}
-                    title="Click to copy this coordinate"
-                  >
-                    UTM {entry.zone} E:{entry.easting} N:{entry.northing} | Lat:{" "}
-                    {entry.lat} Lon: {entry.lon}
-                  </div>
-                  <button
-                    className="remove-btn"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      removeHistoryEntry(entry.id);
-                    }}
-                    title="Remove this entry"
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+      <div
+        className="coordinate-bar"
+        onClick={handleCopy}
+        title="Click to copy current coordinates"
+      >
+        <span>
+          UTM Zone {coords.zone} E: {coords.easting} N: {coords.northing}
+        </span>
+        <span>
+          Lat: {coords.lat} Lon: {coords.lon}
+        </span>
+        <span className="copy-status">{copySuccess}</span>
+        <HistoryToggleButton
+          isOpen={showHistory}
+          toggle={() => setShowHistory((v) => !v)}
+        />
       </div>
 
+      {showHistory && (
+        <div
+          className="history-panel"
+          title="Click coordinate to copy, X to remove"
+        >
+          {history.length === 0 && <div className="empty">No history yet.</div>}
+          {history.map((entry) => (
+            <div key={entry.id} className="history-entry">
+              <div
+                className="coord-text"
+                onClick={() => copyHistoryEntry(entry)}
+                title="Click to copy this coordinate"
+              >
+                UTM {entry.zone} E:{entry.easting} N:{entry.northing} | Lat:{" "}
+                {entry.lat} Lon: {entry.lon}
+              </div>
+              <button
+                className="remove-btn"
+                onClick={() => removeHistoryEntry(entry.id)}
+                title="Remove this entry"
+              >
+                ×
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
       <style>{`
-        .coordinate-button-container {
-          position: fixed;
-          bottom: 20px;
-          right: 20px;
-          z-index: 10000;
+        .coordinate-bar {
+          position: absolute;
+          bottom: 12px;
+          right: 12px;
+          background: rgba(20, 20, 20, 0.7);
+          backdrop-filter: blur(6px);
+          color: #eee;
+          padding: 6px 12px;
+          font-size: 13px;
           font-family: monospace;
-          user-select: none;
-        }
-        .coordinate-toggle-btn {
-          background: rgba(30, 144, 255, 0.85);
-          border: none;
-          color: white;
-          font-size: 26px;
-          padding: 14px 18px;
-          border-radius: 50%;
+          border-radius: 8px;
+          display: flex;
+          gap: 12px;
           cursor: pointer;
-          box-shadow: 0 3px 10px rgba(0,0,0,0.3);
-          transition: background-color 0.3s ease;
+          user-select: none;
+          align-items: center;
+          z-index: 1000;
+          max-width: 95vw;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          position: relative;
         }
-        .coordinate-toggle-btn:hover {
-          background: rgba(30, 144, 255, 1);
+        .copy-status {
+          margin-left: 12px;
+          font-size: 11px;
+          color: #1e90ff;
+          font-weight: bold;
+          opacity: 0.8;
+          transition: opacity 0.3s ease;
+          user-select: none;
+          pointer-events: none;
         }
         .history-panel {
-          margin-top: 10px;
-          width: 360px;
-          max-height: 350px;
-          background: rgba(20, 20, 20, 0.9);
-          border-radius: 10px;
-          padding: 14px 18px;
+          position: absolute;
+          bottom: 50px;
+          right: 12px;
+          max-height: 200px;
+          width: 320px;
+          background: rgba(10, 10, 10, 0.85);
+          border-radius: 8px;
+          padding: 8px;
+          overflow-y: auto;
+          font-family: monospace;
+          font-size: 12px;
           color: #eee;
-          font-size: 13px;
-          box-shadow: 0 4px 16px rgba(0,0,0,0.7);
-          overflow-y: auto;
-          cursor: default;
-          user-select: text;
-        }
-        .current-coords {
-          margin-bottom: 12px;
-        }
-        hr {
-          border: none;
-          border-top: 1px solid #444;
-          margin: 8px 0;
-        }
-        .history-list {
-          max-height: 220px;
-          overflow-y: auto;
+          box-shadow: 0 0 8px rgba(0,0,0,0.5);
+          z-index: 1100;
         }
         .history-entry {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          padding: 6px 8px;
+          padding: 4px 6px;
           border-bottom: 1px solid #333;
-          font-size: 12px;
         }
         .history-entry:last-child {
           border-bottom: none;
@@ -205,6 +187,7 @@ const CoordinateBar = ({ map }) => {
         .coord-text {
           flex: 1;
           cursor: pointer;
+          user-select: none;
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -221,7 +204,6 @@ const CoordinateBar = ({ map }) => {
           cursor: pointer;
           font-size: 14px;
           padding: 0 4px;
-          user-select: none;
         }
         .remove-btn:hover {
           color: #ff6666;
@@ -229,17 +211,8 @@ const CoordinateBar = ({ map }) => {
         .empty {
           text-align: center;
           color: #888;
-          padding: 12px 0;
+          padding: 10px;
           font-style: italic;
-        }
-        .copy-status {
-          margin-top: 6px;
-          font-size: 11px;
-          color: #1e90ff;
-          font-weight: bold;
-          opacity: 0.8;
-          pointer-events: none;
-          user-select: none;
         }
       `}</style>
     </>

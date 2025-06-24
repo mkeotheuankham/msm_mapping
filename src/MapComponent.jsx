@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import "ol/ol.css";
 import { Map, View } from "ol";
-import { fromLonLat, toLonLat } from "ol/proj";
+import { fromLonLat } from "ol/proj";
 import TileLayer from "ol/layer/Tile";
 import XYZ from "ol/source/XYZ";
 import VectorLayer from "ol/layer/Vector";
@@ -12,6 +12,7 @@ import GeoJSON from "ol/format/GeoJSON";
 import BaseMapSwitcher from "./components/BaseMapSwitcher";
 import CoordinateBar from "./components/CoordinateBar";
 import DrawingToolbar from "./components/DrawingToolbar";
+import FeatureTable from "./components/FeatureTable";
 
 const baseMapLayers = {
   osm: {
@@ -41,7 +42,6 @@ const MapComponent = () => {
   const [activeTool, setActiveTool] = useState("None");
   const [featuresData, setFeaturesData] = useState([]);
 
-  // Setup basemaps
   const baseLayersRef = useRef({});
 
   useEffect(() => {
@@ -71,18 +71,15 @@ const MapComponent = () => {
     return () => olMap.setTarget(null);
   }, []);
 
-  // Switch basemap visibility
   useEffect(() => {
     Object.entries(baseLayersRef.current).forEach(([key, layer]) => {
       layer.setVisible(key === baseMap);
     });
   }, [baseMap]);
 
-  // Handle draw tool
   useEffect(() => {
     if (!map || !vectorLayerRef.current) return;
 
-    // Clear old interaction
     if (drawRef.current) {
       map.removeInteraction(drawRef.current);
       drawRef.current = null;
@@ -100,6 +97,7 @@ const MapComponent = () => {
       const geojson = format.writeFeatureObject(evt.feature);
       const coords = geojson.geometry.coordinates;
 
+      evt.feature.set("id", Date.now()); // สำคัญสำหรับลบ
       setFeaturesData((prev) => [
         ...prev,
         {
@@ -120,41 +118,43 @@ const MapComponent = () => {
     setFeaturesData([]);
   };
 
+  const handleRemoveFeature = (id) => {
+    const source = vectorLayerRef.current.getSource();
+    const features = source.getFeatures();
+    const toRemove = features.find((f) => f.get("id") === id);
+    if (toRemove) source.removeFeature(toRemove);
+    setFeaturesData((prev) => prev.filter((f) => f.id !== id));
+  };
+
+  const handleExportGeoJSON = () => {
+    const format = new GeoJSON();
+    const source = vectorLayerRef.current.getSource();
+    const geojson = format.writeFeatures(source.getFeatures());
+    const blob = new Blob([geojson], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "features.geojson";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div style={{ height: "100vh", width: "100%", position: "relative" }}>
       <BaseMapSwitcher baseMap={baseMap} setBaseMap={setBaseMap} />
       <DrawingToolbar
-        activeTool={activeTool}
+        map={map}
         onSelectTool={setActiveTool}
+        setFeaturesData={setFeaturesData}
         onClearAll={handleClearAll}
+      />
+      <FeatureTable
+        features={featuresData}
+        onRemove={handleRemoveFeature}
+        onExport={handleExportGeoJSON}
       />
       <CoordinateBar map={map} />
       <div ref={mapRef} style={{ width: "100%", height: "100%" }} />
-
-      {/* Future: Feature table preview */}
-      <div
-        style={{
-          position: "absolute",
-          bottom: 12,
-          left: 12,
-          background: "rgba(255,255,255,0.9)",
-          padding: "8px",
-          borderRadius: "8px",
-          maxHeight: "150px",
-          overflowY: "auto",
-          fontSize: "12px",
-          fontFamily: "monospace",
-        }}
-      >
-        <strong>Drawn Features:</strong>
-        <ul>
-          {featuresData.map((f) => (
-            <li key={f.id}>
-              {f.type}: {JSON.stringify(f.coordinates)}
-            </li>
-          ))}
-        </ul>
-      </div>
     </div>
   );
 };
